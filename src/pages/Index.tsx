@@ -1,4 +1,3 @@
-
 import { SimulatorForm } from "@/components/SimulatorForm";
 import { ResultsTable } from "@/components/ResultsTable";
 import { GrowthChart } from "@/components/GrowthChart";
@@ -10,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { calculateTokenGrowth, TokenGrowthResults, TokenSimulationParams, MonthData } from "@/lib/tokenCalculations";
+import { calculateTokenGrowth, TokenGrowthResults, TokenSimulationParams, MonthData, getDefaultParams } from "@/lib/tokenCalculations";
 
 const Index = () => {
   const [results, setResults] = useState<TokenGrowthResults | null>(null);
