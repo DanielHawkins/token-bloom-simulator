@@ -19,6 +19,9 @@ import {
   Area
 } from 'recharts';
 
+// Number of months to simulate
+const NUM_MONTHS = 12;
+
 interface StepperProps {
   onComplete: (results: MonthData[]) => void;
 }
@@ -29,44 +32,120 @@ interface APYData {
   apy: string;
 }
 
+interface MonthlyRevenue {
+  month: number;
+  revenue: number;
+}
+
 export const Stepper = ({ onComplete }: StepperProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [revenue, setRevenue] = useState(getDefaultParams().monthlyRevenue.toString());
   const [revenueShare, setRevenueShare] = useState(getDefaultParams().revenueShare.toString());
+  const [monthlyRevenues, setMonthlyRevenues] = useState<MonthlyRevenue[]>(() => {
+    // Initialize with default values for all months
+    return Array.from({ length: NUM_MONTHS }, (_, i) => ({
+      month: i + 1,
+      revenue: getDefaultParams().monthlyRevenue
+    }));
+  });
   const [simulationResults, setSimulationResults] = useState<MonthData[] | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   
-  // Generate chart data whenever simulation results change
+  // Update first month revenue when the main revenue input changes
   useEffect(() => {
-    if (simulationResults && simulationResults.length > 0) {
-      const months = 12;
-      // Create parameters for 12-month simulation to show in chart
-      const params: TokenSimulationParams = {
-        ...getDefaultParams(),
-        monthlyRevenue: parseFloat(revenue),
-        revenueShare: parseFloat(revenueShare),
-        months: months
-      };
-      
-      // Run simulation
-      const results = calculateTokenGrowth(params);
-      setChartData(results.months);
+    const revenueValue = parseFloat(revenue);
+    if (!isNaN(revenueValue)) {
+      setMonthlyRevenues(prev => {
+        const updated = [...prev];
+        updated[0] = { ...updated[0], revenue: revenueValue };
+        return updated;
+      });
     }
-  }, [simulationResults, revenue, revenueShare]);
+  }, [revenue]);
+  
+  // Generate chart data whenever monthly revenues change
+  useEffect(() => {
+    if (currentStep >= 2) {
+      const revenueShareValue = parseFloat(revenueShare);
+      if (!isNaN(revenueShareValue)) {
+        // Create parameters for simulation with custom monthly revenues
+        const params: TokenSimulationParams = {
+          ...getDefaultParams(),
+          monthlyRevenue: monthlyRevenues[0].revenue, // Initial revenue (will be overridden)
+          revenueShare: revenueShareValue,
+          months: NUM_MONTHS
+        };
+        
+        // Calculate the simulation with the custom monthly revenues
+        const baseResults = calculateTokenGrowth(params);
+        
+        // Override the revenue and recalculate the token rate for each month
+        let currentPoolSize = params.initialPoolSize;
+        const results = monthlyRevenues.map((monthData, index) => {
+          const productSales = monthData.revenue * (params.onChainSalesPercent / 100);
+          const revenueShareAmount = productSales * (revenueShareValue / 100);
+          
+          // Add revenue share to pool
+          currentPoolSize += revenueShareAmount;
+          
+          // Calculate new token rate based on pool size and token emission
+          const tokenRate = currentPoolSize / params.premiumTokenEmission;
+          
+          return {
+            month: index + 1,
+            revenue: monthData.revenue,
+            productSales: productSales,
+            revenueShare: revenueShareAmount,
+            poolTopUp: revenueShareAmount,
+            poolSize: currentPoolSize,
+            tokenRate: tokenRate,
+          };
+        });
+        
+        setChartData(results);
+        
+        // If we are at the last step, update the simulation results
+        if (simulationResults && simulationResults.length > 0) {
+          setSimulationResults(results);
+        }
+      }
+    }
+  }, [monthlyRevenues, revenueShare, currentStep]);
   
   const runSimulation = () => {
-    // Create parameters for simulation
+    // Create parameters for simulation using the first month's revenue
     const params: TokenSimulationParams = {
       ...getDefaultParams(),
-      monthlyRevenue: parseFloat(revenue),
+      monthlyRevenue: monthlyRevenues[0].revenue,
       revenueShare: parseFloat(revenueShare),
-      months: 1 // We just need one month for the stepper
+      months: NUM_MONTHS // We need all months for dynamic simulation
     };
     
-    // Run simulation
-    const results = calculateTokenGrowth(params);
-    setSimulationResults(results.months);
-    return results.months;
+    // Calculate the simulation with the custom monthly revenues
+    let currentPoolSize = params.initialPoolSize;
+    const results = monthlyRevenues.map((monthData, index) => {
+      const productSales = monthData.revenue * (params.onChainSalesPercent / 100);
+      const revenueShareAmount = productSales * (parseFloat(revenueShare) / 100);
+      
+      // Add revenue share to pool
+      currentPoolSize += revenueShareAmount;
+      
+      // Calculate new token rate based on pool size and token emission
+      const tokenRate = currentPoolSize / params.premiumTokenEmission;
+      
+      return {
+        month: index + 1,
+        revenue: monthData.revenue,
+        productSales: productSales,
+        revenueShare: revenueShareAmount,
+        poolTopUp: revenueShareAmount,
+        poolSize: currentPoolSize,
+        tokenRate: tokenRate,
+      };
+    });
+    
+    setSimulationResults(results);
+    return results;
   };
   
   const handleNext = () => {
@@ -86,6 +165,16 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       // Run simulation after step 2
       const results = runSimulation();
       setSimulationResults(results);
+    } else if (currentStep === 3) {
+      // Validate monthly revenues before proceeding
+      const invalidMonths = monthlyRevenues.filter(m => m.revenue <= 0);
+      if (invalidMonths.length > 0) {
+        alert(`Please enter valid revenue amounts for all months`);
+        return;
+      }
+      
+      // Update simulation with the latest monthly revenues
+      runSimulation();
     } else if (currentStep === 5) {
       // Complete the stepper
       if (simulationResults) {
@@ -103,10 +192,10 @@ export const Stepper = ({ onComplete }: StepperProps) => {
     if (!simulationResults || simulationResults.length === 0) return "0";
     
     const initialRate = getDefaultParams().initialTokenRate;
-    const finalRate = simulationResults[0].tokenRate;
+    const finalRate = simulationResults[simulationResults.length - 1].tokenRate;
     const increase = finalRate - initialRate;
     const percentIncrease = (increase / initialRate) * 100;
-    const apy = percentIncrease * 12; // Annualized
+    const apy = percentIncrease; // Already annualized since we're using 12 months
     
     return {
       newRate: finalRate.toFixed(2),
@@ -123,6 +212,45 @@ export const Stepper = ({ onComplete }: StepperProps) => {
     return `$${value.toFixed(2)}`;
   };
   
+  const handleRevenueChange = (month: number, value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      setMonthlyRevenues(prev => {
+        const updated = [...prev];
+        updated[month - 1] = { ...updated[month - 1], revenue: numValue };
+        return updated;
+      });
+    }
+  };
+  
+  const renderMonthlyRevenueInputs = () => {
+    // Split months into rows of 3 for better layout
+    const rows = [];
+    for (let i = 0; i < NUM_MONTHS; i += 3) {
+      const monthsInRow = monthlyRevenues.slice(i, i + 3);
+      rows.push(
+        <div key={`row-${i}`} className="grid grid-cols-3 gap-4 mb-4">
+          {monthsInRow.map(month => (
+            <div key={`month-${month.month}`} className="space-y-1">
+              <Label htmlFor={`revenue-month-${month.month}`}>Month {month.month}</Label>
+              <div className="flex gap-2 items-center">
+                <span className="text-sm">$</span>
+                <Input
+                  id={`revenue-month-${month.month}`}
+                  value={month.revenue}
+                  onChange={(e) => handleRevenueChange(month.month, e.target.value)}
+                  placeholder={`Month ${month.month} revenue`}
+                  className="text-sm"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return rows;
+  };
+  
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -130,7 +258,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Start selling your digital products on chain</h2>
             <div className="space-y-2">
-              <Label htmlFor="revenue">Your revenue is:</Label>
+              <Label htmlFor="revenue">Your initial revenue is:</Label>
               <div className="flex gap-2 items-center">
                 <span className="text-lg">$</span>
                 <Input
@@ -150,7 +278,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Share revenue with the pool</h2>
             <p className="text-slate-600 dark:text-slate-400">
-              Your monthly revenue: ${parseFloat(revenue).toLocaleString()}
+              Your initial monthly revenue: ${parseFloat(revenue).toLocaleString()}
             </p>
             <div className="space-y-2">
               <Label htmlFor="revenueShare">Share this percentage of revenue:</Label>
@@ -172,17 +300,12 @@ export const Stepper = ({ onComplete }: StepperProps) => {
         if (!simulationResults) return <div>Loading...</div>;
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Pool topped up with tokens</h2>
+            <h2 className="text-xl font-semibold">Input monthly revenue</h2>
             <p className="text-slate-600 dark:text-slate-400">
-              Based on your inputs, the revenue share has topped up the pool with:
+              Enter the expected revenue for each month to see how the token rate grows:
             </p>
-            <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
-              <p className="text-xl font-bold text-center">
-                {simulationResults[0].revenueShare.toLocaleString()} AVY basic tokens
-              </p>
-            </div>
-            <div className="pt-4">
-              <ResultsTable data={simulationResults} showAllMonths={false} />
+            <div className="mt-4">
+              {renderMonthlyRevenueInputs()}
             </div>
           </div>
         );
@@ -193,15 +316,18 @@ export const Stepper = ({ onComplete }: StepperProps) => {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Increased pool size</h2>
             <p className="text-slate-600 dark:text-slate-400">
-              The pool has been increased to:
+              The pool has increased throughout the year:
             </p>
             <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
               <p className="text-xl font-bold text-center">
-                {simulationResults[0].poolSize.toLocaleString()} AVY basic tokens
+                Initial: {getDefaultParams().initialPoolSize.toLocaleString()} AVY → Final: {simulationResults[simulationResults.length-1].poolSize.toLocaleString()} AVY
               </p>
             </div>
             <div className="pt-4">
-              <ResultsTable data={simulationResults} showAllMonths={false} />
+              <ResultsTable data={simulationResults.slice(0, 3)} showAllMonths={false} />
+              <div className="text-center mt-2 text-sm text-slate-500">
+                Showing first 3 months. Full data available in the advanced simulator.
+              </div>
             </div>
           </div>
         );
@@ -219,7 +345,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Premium token rate increase</h2>
             <p className="text-slate-600 dark:text-slate-400">
-              The premium token (AVYX) rate has increased:
+              The premium token (AVYX) rate has increased based on your data:
             </p>
             <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
               <p className="text-xl font-bold text-center">
@@ -228,9 +354,12 @@ export const Stepper = ({ onComplete }: StepperProps) => {
             </div>
             <div className="pt-4">
               <p className="text-slate-600 dark:text-slate-400 mb-4">
-                This is just for one month. Over a year, the growth can be substantial.
+                This growth is based on your custom monthly revenue projections.
               </p>
-              <ResultsTable data={simulationResults} showAllMonths={false} />
+              <ResultsTable data={simulationResults.slice(0, 3)} showAllMonths={false} />
+              <div className="text-center mt-2 text-sm text-slate-500">
+                Showing first 3 months. Full data available in the advanced simulator.
+              </div>
             </div>
           </div>
         );
@@ -241,12 +370,12 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   };
 
   const renderRateChart = () => {
-    if (!chartData || chartData.length === 0) {
+    if (!chartData || chartData.length === 0 || currentStep < 2) {
       // Show placeholder when no data is available
       return (
         <div className="flex items-center justify-center h-full">
           <p className="text-slate-500 dark:text-slate-400 text-center">
-            Complete steps to see the projected<br />rate growth over 12 months
+            Complete steps to see the projected<br />rate growth over {NUM_MONTHS} months
           </p>
         </div>
       );
@@ -254,7 +383,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
 
     return (
       <div className="w-full h-full">
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Token Rate Projection (12 months)</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Token Rate Projection ({NUM_MONTHS} months)</p>
         <ResponsiveContainer width="100%" height="80%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -277,11 +406,11 @@ export const Stepper = ({ onComplete }: StepperProps) => {
             />
           </AreaChart>
         </ResponsiveContainer>
-        {currentStep >= 3 && simulationResults && (
+        {currentStep >= 2 && chartData && (
           <div className="mt-4 text-sm">
             <p className="font-medium">Projected Growth:</p>
             <p>Starting: ${getDefaultParams().initialTokenRate.toFixed(2)}</p>
-            <p>After 12 months: ${chartData.length > 0 ? chartData[chartData.length - 1].tokenRate.toFixed(2) : '0.00'}</p>
+            <p>After {NUM_MONTHS} months: ${chartData.length > 0 ? chartData[chartData.length - 1].tokenRate.toFixed(2) : '0.00'}</p>
           </div>
         )}
       </div>

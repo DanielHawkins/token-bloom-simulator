@@ -1,3 +1,4 @@
+
 import { SimulatorForm } from "@/components/SimulatorForm";
 import { ResultsTable } from "@/components/ResultsTable";
 import { GrowthChart } from "@/components/GrowthChart";
@@ -24,14 +25,14 @@ const Index = () => {
   const handleStepperComplete = (stepperData: MonthData[]) => {
     setStepperResults(stepperData);
     
-    // Create full simulation for 12 months to show projection
+    // Use the full simulation data from the stepper
+    const lastMonth = stepperData[stepperData.length - 1];
+    
+    // Create a results object with the data from the stepper
     const params = {
-      ...calculateTokenGrowth({
-        ...getDefaultParams(),
-        monthlyRevenue: stepperData[0].revenue,
-        revenueShare: (stepperData[0].revenueShare / stepperData[0].productSales) * 100,
-        months: 12
-      })
+      months: stepperData,
+      initialTokenRate: getDefaultParams().initialTokenRate,
+      apy: ((lastMonth.tokenRate / getDefaultParams().initialTokenRate) - 1) * 100
     };
     
     setResults(params);
