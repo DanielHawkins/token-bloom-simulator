@@ -4,9 +4,13 @@ import { MonthData, formatCurrency } from "@/lib/tokenCalculations";
 
 interface ResultsTableProps {
   data: MonthData[];
+  showAllMonths?: boolean;
 }
 
-export const ResultsTable = ({ data }: ResultsTableProps) => {
+export const ResultsTable = ({ data, showAllMonths = true }: ResultsTableProps) => {
+  // If not showing all months, just show the first month
+  const displayData = showAllMonths ? data : data.length > 0 ? [data[0]] : [];
+  
   return (
     <Table>
       <TableHeader>
@@ -21,7 +25,7 @@ export const ResultsTable = ({ data }: ResultsTableProps) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.map((row) => (
+        {displayData.map((row) => (
           <TableRow key={row.month}>
             <TableCell>{row.month}</TableCell>
             <TableCell className="text-right">{formatCurrency(row.revenue)}</TableCell>
