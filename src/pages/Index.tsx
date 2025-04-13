@@ -1,11 +1,9 @@
-
 import { SimulatorForm } from "@/components/SimulatorForm";
 import { ResultsTable } from "@/components/ResultsTable";
 import { GrowthChart } from "@/components/GrowthChart";
 import { ModelExplanation } from "@/components/ModelExplanation";
 import { Stepper } from "@/components/Stepper";
 import { useState } from "react";
-import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
