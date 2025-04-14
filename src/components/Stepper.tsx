@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -223,6 +224,12 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   };
   
   const renderStepContent = () => {
+    // Calculate APY data outside of the case statements to avoid redeclaration
+    let apyData: APYData | "0" = "0";
+    if (simulationResults && simulationResults.length > 0 && (currentStep === 4 || currentStep === 5)) {
+      apyData = calculateAPY();
+    }
+    
     switch (currentStep) {
       case 1:
         return (
@@ -314,7 +321,6 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       
       case 4:
         if (!simulationResults) return <div>Loading...</div>;
-        const apyData = calculateAPY();
         
         if (apyData === "0") {
           return <div>Error calculating results</div>;
@@ -338,7 +344,6 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       
       case 5:
         if (!simulationResults) return <div>Loading...</div>;
-        const apyData = calculateAPY();
         
         if (apyData === "0") {
           return <div>Error calculating results</div>;
@@ -502,5 +507,3 @@ export const Stepper = ({ onComplete }: StepperProps) => {
     </div>
   );
 };
-
-export { Stepper };
