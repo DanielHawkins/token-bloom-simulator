@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -315,22 +314,24 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       
       case 4:
         if (!simulationResults) return <div>Loading...</div>;
+        const apyData = calculateAPY();
+        
+        if (apyData === "0") {
+          return <div>Error calculating results</div>;
+        }
+        
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gradient">Increased pool size</h2>
-            <p className="text-blue-400/80">
-              The pool has increased throughout the year:
-            </p>
             <div className="bg-muted p-4 rounded-lg border border-blue-500/20 animate-pulse-glow">
               <p className="text-xl font-bold text-center text-gradient">
                 Initial: {getDefaultParams().initialPoolSize.toLocaleString()} AVY → Final: {simulationResults[simulationResults.length-1].poolSize.toLocaleString()} AVY
+                <br />
+                <span className="text-sm text-blue-400">APY ~{apyData.apy}%</span>
               </p>
             </div>
             <div className="pt-4">
               <ResultsTable data={simulationResults.slice(0, 3)} showAllMonths={false} />
-              <div className="text-center mt-2 text-sm text-blue-400/60">
-                Showing first 3 months. Full data available in the advanced simulator.
-              </div>
             </div>
           </div>
         );
@@ -501,3 +502,5 @@ export const Stepper = ({ onComplete }: StepperProps) => {
     </div>
   );
 };
+
+export { Stepper };
