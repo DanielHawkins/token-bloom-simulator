@@ -209,7 +209,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
     }
   };
   
-  const calculateAPY = (): APYData | "0" => {
+  const getApyData = () => {
     if (!simulationResults || simulationResults.length === 0) return "0";
     
     const initialRate = getDefaultParams().initialTokenRate;
@@ -223,6 +223,10 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       increase: percentIncrease.toFixed(1),
       apy: apy.toFixed(2)
     };
+  };
+  
+  const calculateAPY = (): APYData | "0" => {
+    return getApyData();
   };
 
   const formatYAxis = (value: number) => {
@@ -252,10 +256,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   };
   
   const renderStepContent = () => {
-    let apyData: APYData | "0" = "0";
-    if (simulationResults && simulationResults.length > 0 && (currentStep === 4 || currentStep === 5)) {
-      apyData = calculateAPY();
-    }
+    const apyData = getApyData();
     
     switch (currentStep) {
       case 1:
@@ -411,9 +412,6 @@ export const Stepper = ({ onComplete }: StepperProps) => {
                 <br />
                 <span className="text-sm text-blue-400">APY ~{apyData.apy}%</span>
               </p>
-            </div>
-            <div className="pt-4">
-              <ResultsTable data={simulationResults.slice(0, 3)} showAllMonths={false} />
             </div>
           </div>
         );
