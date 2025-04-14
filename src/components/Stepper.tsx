@@ -1,13 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResultsTable } from "@/components/ResultsTable";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, DollarSign, BarChart3, LineChart } from "lucide-react";
 import { calculateTokenGrowth, TokenSimulationParams, getDefaultParams, MonthData } from "@/lib/tokenCalculations";
 import { 
-  LineChart, 
+  LineChart as RechartsLineChart, 
   Line, 
   XAxis, 
   YAxis, 
@@ -227,17 +228,19 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       case 1:
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Start selling your digital products on chain</h2>
+            <h2 className="text-xl font-semibold text-gradient">Start selling your digital products on chain</h2>
             <div className="space-y-2">
-              <Label htmlFor="revenue">Your initial revenue is:</Label>
+              <Label htmlFor="revenue" className="text-blue-400">Your initial revenue is:</Label>
               <div className="flex gap-2 items-center">
-                <span className="text-lg">$</span>
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <DollarSign size={20} className="text-blue-400" />
+                </div>
                 <Input
                   id="revenue"
                   value={revenue}
                   onChange={(e) => setRevenue(e.target.value)}
                   placeholder="Enter revenue amount"
-                  className="text-lg"
+                  className="text-lg bg-secondary border-blue-500/30 focus-visible:ring-blue-500"
                 />
               </div>
             </div>
@@ -247,21 +250,21 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       case 2:
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Share revenue with the pool</h2>
-            <p className="text-slate-600 dark:text-slate-400">
+            <h2 className="text-xl font-semibold text-gradient">Share revenue with the pool</h2>
+            <p className="text-blue-400/80">
               Your initial monthly revenue: ${parseFloat(revenue).toLocaleString()}
             </p>
             <div className="space-y-2">
-              <Label htmlFor="revenueShare">Share this percentage of revenue:</Label>
+              <Label htmlFor="revenueShare" className="text-blue-400">Share this percentage of revenue:</Label>
               <div className="flex gap-2 items-center">
                 <Input
                   id="revenueShare"
                   value={revenueShare}
                   onChange={(e) => setRevenueShare(e.target.value)}
                   placeholder="Enter percentage"
-                  className="text-lg"
+                  className="text-lg bg-secondary border-blue-500/30 focus-visible:ring-blue-500"
                 />
-                <span className="text-lg">%</span>
+                <div className="text-lg text-blue-400">%</div>
               </div>
             </div>
           </div>
@@ -272,34 +275,36 @@ export const Stepper = ({ onComplete }: StepperProps) => {
         
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Input monthly revenue</h2>
-            <p className="text-slate-600 dark:text-slate-400">
+            <h2 className="text-xl font-semibold text-gradient">Input monthly revenue</h2>
+            <p className="text-blue-400/80">
               Month {currentMonth} of {NUM_MONTHS}:
             </p>
             <div className="space-y-2">
-              <Label htmlFor={`revenue-month-${currentMonth}`}>
+              <Label htmlFor={`revenue-month-${currentMonth}`} className="text-blue-400">
                 Revenue for Month {currentMonth}:
               </Label>
               <div className="flex gap-2 items-center">
-                <span className="text-lg">$</span>
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <DollarSign size={20} className="text-blue-400" />
+                </div>
                 <Input
                   id={`revenue-month-${currentMonth}`}
                   value={monthlyRevenues[currentMonth - 1].revenue}
                   onChange={(e) => handleRevenueChange(currentMonth, e.target.value)}
                   placeholder={`Month ${currentMonth} revenue`}
-                  className="text-lg"
+                  className="text-lg bg-secondary border-blue-500/30 focus-visible:ring-blue-500"
                 />
               </div>
             </div>
             
             {currentMonth > 1 && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium mb-2">Revenue Progress:</h3>
+                <h3 className="text-sm font-medium text-blue-400 mb-2">Revenue Progress:</h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 text-xs">
                   {monthlyRevenues.slice(0, currentMonth).map((month) => (
-                    <div key={month.month} className="bg-slate-100 dark:bg-slate-800 p-2 rounded">
-                      <p className="font-medium">Month {month.month}</p>
-                      <p>${month.revenue.toLocaleString()}</p>
+                    <div key={month.month} className="bg-muted p-2 rounded border border-blue-500/20">
+                      <p className="font-medium text-blue-400">Month {month.month}</p>
+                      <p className="text-white">${month.revenue.toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
@@ -312,18 +317,18 @@ export const Stepper = ({ onComplete }: StepperProps) => {
         if (!simulationResults) return <div>Loading...</div>;
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Increased pool size</h2>
-            <p className="text-slate-600 dark:text-slate-400">
+            <h2 className="text-xl font-semibold text-gradient">Increased pool size</h2>
+            <p className="text-blue-400/80">
               The pool has increased throughout the year:
             </p>
-            <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
-              <p className="text-xl font-bold text-center">
+            <div className="bg-muted p-4 rounded-lg border border-blue-500/20 animate-pulse-glow">
+              <p className="text-xl font-bold text-center text-gradient">
                 Initial: {getDefaultParams().initialPoolSize.toLocaleString()} AVY → Final: {simulationResults[simulationResults.length-1].poolSize.toLocaleString()} AVY
               </p>
             </div>
             <div className="pt-4">
               <ResultsTable data={simulationResults.slice(0, 3)} showAllMonths={false} />
-              <div className="text-center mt-2 text-sm text-slate-500">
+              <div className="text-center mt-2 text-sm text-blue-400/60">
                 Showing first 3 months. Full data available in the advanced simulator.
               </div>
             </div>
@@ -340,21 +345,21 @@ export const Stepper = ({ onComplete }: StepperProps) => {
         
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Premium token rate increase</h2>
-            <p className="text-slate-600 dark:text-slate-400">
+            <h2 className="text-xl font-semibold text-gradient">Premium token rate increase</h2>
+            <p className="text-blue-400/80">
               The premium token (AVYX) rate has increased based on your data:
             </p>
-            <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
-              <p className="text-xl font-bold text-center">
+            <div className="bg-muted p-4 rounded-lg border border-blue-500/20 animate-pulse-glow">
+              <p className="text-xl font-bold text-center text-gradient">
                 $1.00 → ${apyData.newRate} (+{apyData.increase}% / ~{apyData.apy}% APY)
               </p>
             </div>
             <div className="pt-4">
-              <p className="text-slate-600 dark:text-slate-400 mb-4">
+              <p className="text-blue-400/80 mb-4">
                 This growth is based on your custom monthly revenue projections.
               </p>
               <ResultsTable data={simulationResults.slice(0, 3)} showAllMonths={false} />
-              <div className="text-center mt-2 text-sm text-slate-500">
+              <div className="text-center mt-2 text-sm text-blue-400/60">
                 Showing first 3 months. Full data available in the advanced simulator.
               </div>
             </div>
@@ -370,47 +375,52 @@ export const Stepper = ({ onComplete }: StepperProps) => {
     if (!chartData || chartData.length === 0 || currentStep < 2) {
       return (
         <div className="flex items-center justify-center h-full">
-          <p className="text-slate-500 dark:text-slate-400 text-center">
-            Complete steps to see the projected<br />rate growth over {NUM_MONTHS} months
-          </p>
+          <div className="text-center">
+            <LineChart className="h-12 w-12 text-blue-400 mx-auto mb-2 opacity-50" />
+            <p className="text-blue-400/80 text-center">
+              Complete steps to see the projected<br />rate growth over {NUM_MONTHS} months
+            </p>
+          </div>
         </div>
       );
     }
 
     return (
       <div className="w-full h-full">
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+        <p className="text-sm text-blue-400/80 mb-2">
           {currentStep === 3 
             ? `Token Rate Projection (Month 1 to ${Math.min(currentMonth, NUM_MONTHS)})` 
             : `Token Rate Projection (${NUM_MONTHS} months)`}
         </p>
         <ResponsiveContainer width="100%" height="80%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(59, 130, 246, 0.2)" />
+            <XAxis dataKey="month" stroke="rgba(59, 130, 246, 0.5)" />
             <YAxis 
               tickFormatter={formatYAxis}
               domain={['dataMin', 'auto']}
+              stroke="rgba(59, 130, 246, 0.5)"
             />
             <Tooltip 
               formatter={(value: number) => [formatTooltipValue(value), 'Token Rate']}
               labelFormatter={(label) => `Month ${label}`}
+              contentStyle={{ background: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(59, 130, 246, 0.3)' }}
             />
             <Area 
               type="monotone" 
               dataKey="tokenRate" 
               name="Token Rate" 
-              stroke="#8884d8" 
-              fill="#8884d8"
-              fillOpacity={0.3}
+              stroke="rgb(59, 130, 246)" 
+              fill="rgba(59, 130, 246, 0.2)"
+              strokeWidth={2}
             />
           </AreaChart>
         </ResponsiveContainer>
         {currentStep >= 2 && chartData && (
           <div className="mt-4 text-sm">
-            <p className="font-medium">Projected Growth:</p>
-            <p>Starting: ${getDefaultParams().initialTokenRate.toFixed(2)}</p>
-            <p>
+            <p className="font-medium text-blue-400">Projected Growth:</p>
+            <p className="text-white">Starting: ${getDefaultParams().initialTokenRate.toFixed(2)}</p>
+            <p className="text-gradient font-semibold">
               {currentStep === 3 && currentMonth < NUM_MONTHS 
                 ? `Month ${currentMonth}: $${chartData.length > 0 ? chartData[chartData.length - 1].tokenRate.toFixed(2) : '0.00'}`
                 : `After ${NUM_MONTHS} months: $${chartData.length > 0 ? chartData[chartData.length - 1].tokenRate.toFixed(2) : '0.00'}`
@@ -424,26 +434,26 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-      <Card className="lg:col-span-3">
+      <Card className="lg:col-span-3 glass-card">
         <CardContent className="pt-6">
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
               {[1, 2, 3, 4, 5].map((step) => (
                 <div 
                   key={step}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center border ${
                     currentStep === step 
-                      ? "bg-primary text-primary-foreground" 
+                      ? "bg-primary text-white border-primary" 
                       : currentStep > step 
-                        ? "bg-primary/20 text-primary" 
-                        : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+                        ? "bg-primary/20 text-primary border-primary/50" 
+                        : "bg-secondary text-blue-400/50 border-blue-500/20"
                   }`}
                 >
                   {step}
                 </div>
               ))}
             </div>
-            <div className="relative h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className="relative h-2 bg-secondary rounded-full overflow-hidden border border-blue-500/20">
               <div 
                 className="absolute top-0 left-0 h-full bg-primary transition-all duration-300"
                 style={{ 
@@ -464,12 +474,12 @@ export const Stepper = ({ onComplete }: StepperProps) => {
               onClick={handlePrevious} 
               variant="outline" 
               disabled={currentStep === 1 && currentMonth === 1}
-              className="gap-2"
+              className="gap-2 border-blue-500/30 hover:bg-blue-500/10 text-blue-400"
             >
               <ArrowLeft className="h-4 w-4" /> 
               Previous
             </Button>
-            <Button onClick={handleNext} className="gap-2">
+            <Button onClick={handleNext} className="gap-2 bg-primary hover:bg-primary/90">
               {currentStep === 5 ? "Complete" : (
                 currentStep === 3 && currentMonth < NUM_MONTHS ? `Next Month (${currentMonth + 1})` : "Next"
               )} 
@@ -479,9 +489,12 @@ export const Stepper = ({ onComplete }: StepperProps) => {
         </CardContent>
       </Card>
       
-      <Card className="lg:col-span-2">
+      <Card className="lg:col-span-2 glass-card">
         <CardContent className="pt-6 h-[500px]">
-          <h3 className="text-lg font-semibold mb-4">Rate Growth Projection</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gradient flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Rate Growth Projection
+          </h3>
           {renderRateChart()}
         </CardContent>
       </Card>
