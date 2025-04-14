@@ -49,10 +49,10 @@ const Index = () => {
       <div className="container mx-auto py-8 px-4 lg:px-8">
         <header className="text-center mb-10">
           <h1 className="text-4xl font-bold tracking-tight mb-2 text-gradient">
-            Token Bloom Simulator
+            Token Growth Simulator
           </h1>
           <p className="text-lg text-blue-400/80 dark:text-blue-400/80 max-w-2xl mx-auto">
-            Visualize premium token rate growth based on revenue share from digital product sales on-chain
+            Visualize premium token rate growth<br />based on revenue share from digital product sales on-chain
           </p>
         </header>
 

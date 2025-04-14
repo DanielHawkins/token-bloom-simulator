@@ -121,97 +121,24 @@ export const SimulatorForm = ({ onSimulate }: SimulatorFormProps) => {
 
       <Separator />
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Token Parameters</h2>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="basicTokenEmission">Basic Token Emission</Label>
-            <Input
-              id="basicTokenEmission"
-              type="number"
-              value={params.basicTokenEmission}
-              onChange={(e) => handleInputChange("basicTokenEmission", e.target.value)}
-              min="1000"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="basicTokenSpendingDemand">Basic Token Spending Demand (%)</Label>
-            <Input
-              id="basicTokenSpendingDemand"
-              type="number"
-              value={params.basicTokenSpendingDemand}
-              onChange={(e) => handleInputChange("basicTokenSpendingDemand", e.target.value)}
-              min="0"
-              max="1000"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="premiumTokenEmission">Premium Token Emission</Label>
-            <Input
-              id="premiumTokenEmission"
-              type="number"
-              value={params.premiumTokenEmission}
-              onChange={(e) => handleInputChange("premiumTokenEmission", e.target.value)}
-              min="1000"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="initialPoolSize">Initial Pool Size ($)</Label>
-            <Input
-              id="initialPoolSize"
-              type="number"
-              value={params.initialPoolSize}
-              onChange={(e) => handleInputChange("initialPoolSize", e.target.value)}
-              min="1000"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="initialTokenRate">Initial Token Rate ($)</Label>
-          <Input
-            id="initialTokenRate"
-            type="number"
-            value={params.initialTokenRate}
-            onChange={(e) => handleInputChange("initialTokenRate", e.target.value)}
-            min="0.01"
-            step="0.01"
-          />
-          <Slider
-            id="initialTokenRateSlider"
-            value={[params.initialTokenRate]}
-            min={0.01}
-            max={10}
-            step={0.01}
-            onValueChange={(value) => handleSliderChange("initialTokenRate", value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="months">Simulation Period (months)</Label>
-          <Input
-            id="months"
-            type="number"
-            value={params.months}
-            onChange={(e) => handleInputChange("months", e.target.value)}
-            min="1"
-            max="60"
-          />
-          <Slider
-            id="monthsSlider"
-            value={[params.months]}
-            min={1}
-            max={36}
-            step={1}
-            onValueChange={(value) => handleSliderChange("months", value)}
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="months">Simulation Period (months)</Label>
+        <Input
+          id="months"
+          type="number"
+          value={params.months}
+          onChange={(e) => handleInputChange("months", e.target.value)}
+          min="1"
+          max="60"
+        />
+        <Slider
+          id="monthsSlider"
+          value={[params.months]}
+          min={1}
+          max={36}
+          step={1}
+          onValueChange={(value) => handleSliderChange("months", value)}
+        />
       </div>
 
       <Button type="submit" className="w-full">Run Simulation</Button>
