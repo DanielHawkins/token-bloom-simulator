@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResultsTable } from "@/components/ResultsTable";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowRight, ArrowLeft, DollarSign, BarChart3, LineChart } from "lucide-react";
 import { calculateTokenGrowth, TokenSimulationParams, getDefaultParams, MonthData } from "@/lib/tokenCalculations";
 import { 
@@ -41,6 +41,8 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   const [currentMonth, setCurrentMonth] = useState(1);
   const [revenue, setRevenue] = useState(getDefaultParams().monthlyRevenue.toString());
   const [revenueShare, setRevenueShare] = useState(getDefaultParams().revenueShare.toString());
+  const [monthlyIncreaseMode, setMonthlyIncreaseMode] = useState<"auto" | "manual">("auto");
+  const [monthlyRevenueIncrease, setMonthlyRevenueIncrease] = useState(getDefaultParams().monthlyRevenueIncrease);
   const [monthlyRevenues, setMonthlyRevenues] = useState<MonthlyRevenue[]>(() => {
     return Array.from({ length: NUM_MONTHS }, (_, i) => ({
       month: i + 1,
@@ -60,6 +62,23 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       });
     }
   }, [revenue]);
+  
+  useEffect(() => {
+    if (monthlyIncreaseMode === "auto") {
+      const revenueValue = parseFloat(revenue);
+      if (!isNaN(revenueValue)) {
+        const newRevenues = Array.from({ length: NUM_MONTHS }, (_, i) => {
+          if (i === 0) return { month: i + 1, revenue: revenueValue };
+          
+          const previousMonthRevenue = revenueValue * Math.pow(1 + monthlyRevenueIncrease / 100, i - 1);
+          const currentMonthRevenue = previousMonthRevenue * (1 + monthlyRevenueIncrease / 100);
+          return { month: i + 1, revenue: currentMonthRevenue };
+        });
+        
+        setMonthlyRevenues(newRevenues);
+      }
+    }
+  }, [revenue, monthlyRevenueIncrease, monthlyIncreaseMode]);
   
   useEffect(() => {
     if (currentStep >= 2) {
@@ -154,15 +173,17 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       const results = runSimulation();
       setSimulationResults(results);
     } else if (currentStep === 3) {
-      const monthRevenue = monthlyRevenues[currentMonth - 1].revenue;
-      if (isNaN(monthRevenue) || monthRevenue <= 0) {
-        alert(`Please enter a valid revenue amount for month ${currentMonth}`);
-        return;
-      }
+      if (monthlyIncreaseMode === "manual") {
+        const monthRevenue = monthlyRevenues[currentMonth - 1].revenue;
+        if (isNaN(monthRevenue) || monthRevenue <= 0) {
+          alert(`Please enter a valid revenue amount for month ${currentMonth}`);
+          return;
+        }
 
-      if (currentMonth < NUM_MONTHS) {
-        setCurrentMonth(currentMonth + 1);
-        return;
+        if (currentMonth < NUM_MONTHS) {
+          setCurrentMonth(currentMonth + 1);
+          return;
+        }
       }
       
       runSimulation();
@@ -181,7 +202,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   };
 
   const handlePrevious = () => {
-    if (currentStep === 3 && currentMonth > 1) {
+    if (currentStep === 3 && currentMonth > 1 && monthlyIncreaseMode === "manual") {
       setCurrentMonth(currentMonth - 1);
     } else {
       setCurrentStep(currentStep - 1);
@@ -222,9 +243,15 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       });
     }
   };
+
+  const handleMonthlyIncreaseChange = (value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      setMonthlyRevenueIncrease(numValue);
+    }
+  };
   
   const renderStepContent = () => {
-    // Calculate APY data outside of the case statements to avoid redeclaration
     let apyData: APYData | "0" = "0";
     if (simulationResults && simulationResults.length > 0 && (currentStep === 4 || currentStep === 5)) {
       apyData = calculateAPY();
@@ -282,32 +309,81 @@ export const Stepper = ({ onComplete }: StepperProps) => {
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gradient">Input monthly revenue</h2>
-            <p className="text-blue-400/80">
-              Month {currentMonth} of {NUM_MONTHS}:
-            </p>
-            <div className="space-y-2">
-              <Label htmlFor={`revenue-month-${currentMonth}`} className="text-blue-400">
-                Revenue for Month {currentMonth}:
-              </Label>
-              <div className="flex gap-2 items-center">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <DollarSign size={20} className="text-blue-400" />
-                </div>
-                <Input
-                  id={`revenue-month-${currentMonth}`}
-                  value={monthlyRevenues[currentMonth - 1].revenue}
-                  onChange={(e) => handleRevenueChange(currentMonth, e.target.value)}
-                  placeholder={`Month ${currentMonth} revenue`}
-                  className="text-lg bg-secondary border-blue-500/30 focus-visible:ring-blue-500"
-                />
-              </div>
-            </div>
             
-            {currentMonth > 1 && (
-              <div className="mt-6">
-                <h3 className="text-sm font-medium text-blue-400 mb-2">Revenue Progress:</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 text-xs">
-                  {monthlyRevenues.slice(0, currentMonth).map((month) => (
+            <RadioGroup 
+              value={monthlyIncreaseMode}
+              onValueChange={(value) => setMonthlyIncreaseMode(value as "auto" | "manual")}
+              className="space-y-3 bg-blue-500/5 p-3 rounded-md border border-blue-500/20"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="auto" id="auto-increase" />
+                <Label htmlFor="auto-increase" className="font-medium cursor-pointer">
+                  Use monthly revenue increase % for all months
+                </Label>
+              </div>
+              {monthlyIncreaseMode === "auto" && (
+                <div className="ml-6 flex items-center gap-2">
+                  <Input
+                    type="number"
+                    value={monthlyRevenueIncrease}
+                    onChange={(e) => handleMonthlyIncreaseChange(e.target.value)}
+                    className="w-20 bg-secondary border-blue-500/30 focus-visible:ring-blue-500"
+                  />
+                  <span className="text-blue-400">%</span>
+                </div>
+              )}
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="manual" id="manual-input" />
+                <Label htmlFor="manual-input" className="font-medium cursor-pointer">
+                  Manually add revenue for each month
+                </Label>
+              </div>
+            </RadioGroup>
+            
+            {monthlyIncreaseMode === "manual" && (
+              <>
+                <p className="text-blue-400/80">
+                  Month {currentMonth} of {NUM_MONTHS}:
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor={`revenue-month-${currentMonth}`} className="text-blue-400">
+                    Revenue for Month {currentMonth}:
+                  </Label>
+                  <div className="flex gap-2 items-center">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                      <DollarSign size={20} className="text-blue-400" />
+                    </div>
+                    <Input
+                      id={`revenue-month-${currentMonth}`}
+                      value={monthlyRevenues[currentMonth - 1].revenue}
+                      onChange={(e) => handleRevenueChange(currentMonth, e.target.value)}
+                      placeholder={`Month ${currentMonth} revenue`}
+                      className="text-lg bg-secondary border-blue-500/30 focus-visible:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                {currentMonth > 1 && (
+                  <div className="mt-6">
+                    <h3 className="text-sm font-medium text-blue-400 mb-2">Revenue Progress:</h3>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 text-xs">
+                      {monthlyRevenues.slice(0, currentMonth).map((month) => (
+                        <div key={month.month} className="bg-muted p-2 rounded border border-blue-500/20">
+                          <p className="font-medium text-blue-400">Month {month.month}</p>
+                          <p className="text-white">${month.revenue.toLocaleString()}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {monthlyIncreaseMode === "auto" && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-blue-400 mb-2">Projected Monthly Revenue:</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 text-xs h-[140px] overflow-y-auto pr-1">
+                  {monthlyRevenues.map((month) => (
                     <div key={month.month} className="bg-muted p-2 rounded border border-blue-500/20">
                       <p className="font-medium text-blue-400">Month {month.month}</p>
                       <p className="text-white">${month.revenue.toLocaleString()}</p>
@@ -487,7 +563,9 @@ export const Stepper = ({ onComplete }: StepperProps) => {
             </Button>
             <Button onClick={handleNext} className="gap-2 bg-primary hover:bg-primary/90">
               {currentStep === 5 ? "Complete" : (
-                currentStep === 3 && currentMonth < NUM_MONTHS ? `Next Month (${currentMonth + 1})` : "Next"
+                currentStep === 3 && currentMonth < NUM_MONTHS && monthlyIncreaseMode === "manual" 
+                  ? `Next Month (${currentMonth + 1})` 
+                  : "Next"
               )} 
               <ArrowRight className="h-4 w-4" />
             </Button>
