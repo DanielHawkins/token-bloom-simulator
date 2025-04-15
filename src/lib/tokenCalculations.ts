@@ -105,5 +105,5 @@ export const getDefaultParams = (): TokenSimulationParams => {
 };
 
 export const calculateInitialPoolSize = (firstMonthRevenue: number, onChainSalesPercent: number): number => {
-  return (firstMonthRevenue * (onChainSalesPercent / 100)) * 0.5;
+  return (firstMonthRevenue * 0.5) * (onChainSalesPercent / 100);
 };
