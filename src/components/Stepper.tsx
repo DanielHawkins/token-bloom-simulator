@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ResultsTable } from "@/components/ResultsTable";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowRight, ArrowLeft, DollarSign, BarChart3, LineChart } from "lucide-react";
-import { calculateTokenGrowth, TokenSimulationParams, getDefaultParams, MonthData } from "@/lib/tokenCalculations";
+import { 
+  calculateTokenGrowth, 
+  TokenSimulationParams, 
+  getDefaultParams, 
+  MonthData, 
+  calculateInitialPoolSize 
+} from "@/lib/tokenCalculations";
 import { 
   LineChart as RechartsLineChart, 
   Line, 

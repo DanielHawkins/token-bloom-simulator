@@ -43,21 +43,15 @@ export const calculateTokenGrowth = (params: TokenSimulationParams): TokenGrowth
   let currentRevenue = monthlyRevenue;
   let currentPoolSize = initialPoolSize;
   
-  // Calculate for each month
   for (let i = 1; i <= months; i++) {
-    // Calculate on-chain product sales
     const productSales = currentRevenue * (onChainSalesPercent / 100);
     
-    // Calculate revenue share amount
     const revenueShareAmount = productSales * (revenueShare / 100);
     
-    // Add revenue share to pool
     currentPoolSize += revenueShareAmount;
     
-    // Calculate new token rate based on pool size and token emission
     const tokenRate = currentPoolSize / params.premiumTokenEmission;
     
-    // Add data to results
     results.push({
       month: i,
       revenue: currentRevenue,
@@ -68,11 +62,9 @@ export const calculateTokenGrowth = (params: TokenSimulationParams): TokenGrowth
       tokenRate: tokenRate,
     });
     
-    // Increase revenue for next month
     currentRevenue *= (1 + monthlyRevenueIncrease / 100);
   }
   
-  // Calculate APY based on final vs initial token rate
   const finalTokenRate = results[results.length - 1].tokenRate;
   const apy = ((finalTokenRate / initialTokenRate) - 1) * 100 * (12 / months);
   
