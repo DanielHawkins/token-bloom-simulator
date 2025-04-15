@@ -1,4 +1,3 @@
-
 export interface TokenSimulationParams {
   monthlyRevenue: number;
   onChainSalesPercent: number;
@@ -10,6 +9,7 @@ export interface TokenSimulationParams {
   initialPoolSize: number;
   initialTokenRate: number;
   months: number;
+  maxMonthlyRevenue: number;
 }
 
 export interface MonthData {
@@ -105,8 +105,13 @@ export const getDefaultParams = (): TokenSimulationParams => {
     basicTokenEmission: 64000,
     basicTokenSpendingDemand: 125,
     premiumTokenEmission: 32000,
-    initialPoolSize: 32000,
+    initialPoolSize: 0,
     initialTokenRate: 1.0,
     months: 12,
+    maxMonthlyRevenue: 1000000
   };
+};
+
+export const calculateInitialPoolSize = (firstMonthRevenue: number, onChainSalesPercent: number): number => {
+  return (firstMonthRevenue * (onChainSalesPercent / 100)) * 0.5;
 };

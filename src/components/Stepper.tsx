@@ -18,6 +18,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
+import { TokenIdInput } from "@/components/TokenIdInput";
 
 const NUM_MONTHS = 12;
 
@@ -37,7 +38,7 @@ interface MonthlyRevenue {
 }
 
 export const Stepper = ({ onComplete }: StepperProps) => {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [currentMonth, setCurrentMonth] = useState(1);
   const [revenue, setRevenue] = useState(getDefaultParams().monthlyRevenue.toString());
   const [revenueShare, setRevenueShare] = useState(getDefaultParams().revenueShare.toString());
@@ -51,7 +52,8 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   });
   const [simulationResults, setSimulationResults] = useState<MonthData[] | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
-  
+  const [tokenIds, setTokenIds] = useState<{ basic: string; premium: string } | null>(null);
+
   useEffect(() => {
     const revenueValue = parseFloat(revenue);
     if (!isNaN(revenueValue)) {
@@ -129,9 +131,10 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   const runSimulation = () => {
     const params: TokenSimulationParams = {
       ...getDefaultParams(),
-      monthlyRevenue: monthlyRevenues[0].revenue,
+      monthlyRevenue: Math.min(monthlyRevenues[0].revenue, getDefaultParams().maxMonthlyRevenue),
       revenueShare: parseFloat(revenueShare),
-      months: NUM_MONTHS
+      months: NUM_MONTHS,
+      initialPoolSize: calculateInitialPoolSize(monthlyRevenues[0].revenue, getDefaultParams().onChainSalesPercent)
     };
     
     let currentPoolSize = params.initialPoolSize;
@@ -159,7 +162,12 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   };
   
   const handleNext = () => {
-    if (currentStep === 1) {
+    if (currentStep === 0) {
+      if (!tokenIds) {
+        alert("Please enter a valid token ID");
+        return;
+      }
+    } else if (currentStep === 1) {
       if (!revenue || isNaN(parseFloat(revenue)) || parseFloat(revenue) <= 0) {
         alert("Please enter a valid revenue amount");
         return;
@@ -255,9 +263,18 @@ export const Stepper = ({ onComplete }: StepperProps) => {
     }
   };
   
+  const handleTokenIdComplete = (basicToken: string, premiumToken: string) => {
+    setTokenIds({ basic: basicToken, premium: premiumToken });
+    setCurrentStep(1);
+  };
+
   const renderStepContent = () => {
     const apyData = getApyData();
     
+    if (currentStep === 0) {
+      return <TokenIdInput onComplete={handleTokenIdComplete} />;
+    }
+
     switch (currentStep) {
       case 1:
         return (
@@ -407,11 +424,11 @@ export const Stepper = ({ onComplete }: StepperProps) => {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gradient">Increased pool size</h2>
             <div className="bg-muted p-4 rounded-lg border border-blue-500/20 animate-pulse-glow">
-              <p className="text-xl font-bold text-center text-gradient">
-                Initial: {getDefaultParams().initialPoolSize.toLocaleString()} AVY → Final: {simulationResults[simulationResults.length-1].poolSize.toLocaleString()} AVY
-                <br />
-                <span className="text-sm text-blue-400">APY ~{apyData.apy}%</span>
-              </p>
+              <div className="grid gap-2 text-center">
+                <p className="text-xl font-bold text-gradient">Initial: {getDefaultParams().initialPoolSize.toLocaleString()} {tokenIds?.basic || 'AVY'}</p>
+                <p className="text-xl font-bold text-gradient">Final: {simulationResults[simulationResults.length-1].poolSize.toFixed(3)} {tokenIds?.basic || 'AVY'}</p>
+                <p className="text-xl font-bold text-gradient">APY ~{apyData.apy}%</p>
+              </div>
             </div>
           </div>
         );
@@ -514,72 +531,80 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-      <Card className="lg:col-span-3 glass-card">
-        <CardContent className="pt-6">
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              {[1, 2, 3, 4, 5].map((step) => (
-                <div 
-                  key={step}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border ${
-                    currentStep === step 
-                      ? "bg-primary text-white border-primary" 
-                      : currentStep > step 
-                        ? "bg-primary/20 text-primary border-primary/50" 
-                        : "bg-secondary text-blue-400/50 border-blue-500/20"
-                  }`}
-                >
-                  {step}
+      {currentStep === 0 ? (
+        <div className="lg:col-span-5">
+          {renderStepContent()}
+        </div>
+      ) : (
+        <>
+          <Card className="lg:col-span-3 glass-card">
+            <CardContent className="pt-6">
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  {[1, 2, 3, 4, 5].map((step) => (
+                    <div 
+                      key={step}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center border ${
+                        currentStep === step 
+                          ? "bg-primary text-white border-primary" 
+                          : currentStep > step 
+                            ? "bg-primary/20 text-primary border-primary/50" 
+                            : "bg-secondary text-blue-400/50 border-blue-500/20"
+                      }`}
+                    >
+                      {step}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="relative h-2 bg-secondary rounded-full overflow-hidden border border-blue-500/20">
-              <div 
-                className="absolute top-0 left-0 h-full bg-primary transition-all duration-300"
-                style={{ 
-                  width: currentStep === 3 
-                    ? `${(((currentStep - 1) + (currentMonth - 1) / NUM_MONTHS) / 4) * 100}%` 
-                    : `${((currentStep - 1) / 4) * 100}%` 
-                }}
-              ></div>
-            </div>
-          </div>
+                <div className="relative h-2 bg-secondary rounded-full overflow-hidden border border-blue-500/20">
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-primary transition-all duration-300"
+                    style={{ 
+                      width: currentStep === 3 
+                        ? `${(((currentStep - 1) + (currentMonth - 1) / NUM_MONTHS) / 4) * 100}%` 
+                        : `${((currentStep - 1) / 4) * 100}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div className="min-h-[300px]">
+                {renderStepContent()}
+              </div>
+              
+              <div className="flex justify-between mt-6">
+                <Button 
+                  onClick={handlePrevious} 
+                  variant="outline" 
+                  disabled={currentStep === 1 && currentMonth === 1}
+                  className="gap-2 border-blue-500/30 hover:bg-blue-500/10 text-blue-400 rounded-xl"
+                >
+                  <ArrowLeft className="h-4 w-4" /> 
+                  Previous
+                </Button>
+                <Button onClick={handleNext} className="gap-2 bg-primary hover:bg-primary/90 rounded-xl">
+                  {currentStep === 5 ? "Complete" : (
+                    currentStep === 3 && currentMonth < NUM_MONTHS && monthlyIncreaseMode === "manual"
+                      ? `Next Month (${currentMonth + 1})`
+                      : "Next"
+                  )} 
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
           
-          <div className="min-h-[300px]">
-            {renderStepContent()}
-          </div>
-          
-          <div className="flex justify-between mt-6">
-            <Button 
-              onClick={handlePrevious} 
-              variant="outline" 
-              disabled={currentStep === 1 && currentMonth === 1}
-              className="gap-2 border-blue-500/30 hover:bg-blue-500/10 text-blue-400"
-            >
-              <ArrowLeft className="h-4 w-4" /> 
-              Previous
-            </Button>
-            <Button onClick={handleNext} className="gap-2 bg-primary hover:bg-primary/90">
-              {currentStep === 5 ? "Complete" : (
-                currentStep === 3 && currentMonth < NUM_MONTHS && monthlyIncreaseMode === "manual" 
-                  ? `Next Month (${currentMonth + 1})` 
-                  : "Next"
-              )} 
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="lg:col-span-2 glass-card">
-        <CardContent className="pt-6 h-[500px]">
-          <h3 className="text-lg font-semibold mb-4 text-gradient flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Rate Growth Projection
-          </h3>
-          {renderRateChart()}
-        </CardContent>
-      </Card>
+          <Card className="lg:col-span-2 glass-card">
+            <CardContent className="pt-6 h-[500px]">
+              <h3 className="text-lg font-semibold mb-4 text-gradient flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Rate Growth Projection
+              </h3>
+              {renderRateChart()}
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 };
