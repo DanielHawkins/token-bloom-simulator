@@ -1,3 +1,4 @@
+
 export interface TokenSimulationParams {
   monthlyRevenue: number;
   onChainSalesPercent: number;
@@ -37,11 +38,14 @@ export const calculateTokenGrowth = (params: TokenSimulationParams): TokenGrowth
     initialPoolSize,
     initialTokenRate,
     months,
+    premiumTokenEmission
   } = params;
 
   const results: MonthData[] = [];
   let currentRevenue = monthlyRevenue;
-  let currentPoolSize = initialPoolSize;
+  
+  // Ensure initial pool size guarantees a minimum token rate of 1.00
+  let currentPoolSize = initialPoolSize || premiumTokenEmission;
   
   for (let i = 1; i <= months; i++) {
     const productSales = currentRevenue * (onChainSalesPercent / 100);
@@ -89,6 +93,8 @@ export const formatPercent = (value: number): string => {
 };
 
 export const getDefaultParams = (): TokenSimulationParams => {
+  const premiumTokenEmission = 32000;
+  
   return {
     monthlyRevenue: 80000,
     onChainSalesPercent: 40,
@@ -96,8 +102,8 @@ export const getDefaultParams = (): TokenSimulationParams => {
     revenueShare: 7,
     basicTokenEmission: 64000,
     basicTokenSpendingDemand: 125,
-    premiumTokenEmission: 32000,
-    initialPoolSize: 0,
+    premiumTokenEmission: premiumTokenEmission,
+    initialPoolSize: premiumTokenEmission, // Setting to premiumTokenEmission to ensure 1.0 initial rate
     initialTokenRate: 1.0,
     months: 12,
     maxMonthlyRevenue: 1000000
@@ -105,5 +111,11 @@ export const getDefaultParams = (): TokenSimulationParams => {
 };
 
 export const calculateInitialPoolSize = (firstMonthRevenue: number, onChainSalesPercent: number): number => {
-  return (firstMonthRevenue * 0.5) * (onChainSalesPercent / 100);
+  // Calculate initial pool size to ensure token rate starts at 1.0
+  const premiumTokenEmission = getDefaultParams().premiumTokenEmission;
+  
+  // Calculate from formula but ensure it's never less than what's needed for 1.0 rate
+  const calculatedPoolSize = (firstMonthRevenue * 0.5) * (onChainSalesPercent / 100);
+  
+  return Math.max(calculatedPoolSize, premiumTokenEmission);
 };
