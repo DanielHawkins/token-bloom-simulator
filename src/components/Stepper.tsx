@@ -457,12 +457,6 @@ export const Stepper = ({ onComplete }: StepperProps) => {
                 $1.00 → ${apyData.newRate} (+{apyData.increase}% / ~{apyData.apy}% APY)
               </p>
             </div>
-            <div className="pt-4">
-              <p className="text-blue-400/80 mb-4">
-                This growth is based on your custom monthly revenue projections.
-              </p>
-              <ResultsTable data={simulationResults.slice(0, 3)} showAllMonths={false} />
-            </div>
           </div>
         );
       
