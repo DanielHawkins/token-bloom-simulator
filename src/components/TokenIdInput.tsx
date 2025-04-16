@@ -21,7 +21,7 @@ export const TokenIdInput = ({ onComplete }: TokenIdInputProps) => {
   };
 
   return (
-    <Card className="glass-card">
+    <Card className="glass-card mx-auto max-w-md w-[50%]">
       <CardContent className="pt-6">
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gradient">Enter Your Token ID</h2>
