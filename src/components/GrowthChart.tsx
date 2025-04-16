@@ -99,7 +99,10 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
       );
     } else if (activeView === 'poolSize') {
       return (
-        <ComposedChart data={data}>
+        <ComposedChart 
+          data={data}
+          margin={{ top: 5, right: 30, left: 40, bottom: 5 }} // Increased left margin for y-axis
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="month"
@@ -116,8 +119,10 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
               value: 'Pool Size ($)', 
               angle: -90, 
               position: 'insideLeft',
+              offset: -30, // Increased offset to move label further left
               style: { textAnchor: 'middle' }
             }}
+            width={70} // Increased width to accommodate tick labels
           />
           <Tooltip 
             formatter={(value: number) => [formatTooltipValue(value), 'Pool Size']}
@@ -143,7 +148,10 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
       );
     } else {
       return (
-        <ComposedChart data={data}>
+        <ComposedChart 
+          data={data}
+          margin={{ top: 5, right: 30, left: 40, bottom: 5 }} // Increased left margin
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="month"
@@ -160,8 +168,10 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
               value: 'Revenue ($)', 
               angle: -90, 
               position: 'insideLeft',
+              offset: -30, // Increased offset
               style: { textAnchor: 'middle' }
             }}
+            width={70} // Increased width
           />
           <Tooltip 
             formatter={(value: number) => [formatTooltipValue(value), 'Revenue']}
