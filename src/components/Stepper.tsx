@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -463,9 +462,6 @@ export const Stepper = ({ onComplete }: StepperProps) => {
                 This growth is based on your custom monthly revenue projections.
               </p>
               <ResultsTable data={simulationResults.slice(0, 3)} showAllMonths={false} />
-              <div className="text-center mt-2 text-sm text-blue-400/60">
-                Showing first 3 months. Full data available in the advanced simulator.
-              </div>
             </div>
           </div>
         );
