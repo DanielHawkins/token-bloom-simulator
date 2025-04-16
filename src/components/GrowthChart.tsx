@@ -62,14 +62,17 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
   const renderChart = () => {
     if (activeView === 'tokenRate') {
       return (
-        <LineChart data={data}>
+        <LineChart 
+          data={data}
+          margin={{ top: 10, right: 10, left: 20, bottom: 40 }} // Increased bottom margin
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="month" 
             label={{ 
               value: 'Month', 
               position: 'insideBottom',
-              offset: -5
+              offset: 25 // Increased offset to prevent overlap
             }} 
           />
           <YAxis 
@@ -79,7 +82,7 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
               value: 'Token Rate ($)', 
               angle: -90, 
               position: 'insideLeft',
-              style: { textAnchor: 'middle' }
+              offset: 10
             }} 
           />
           <Tooltip 
@@ -101,7 +104,7 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
       return (
         <ComposedChart 
           data={data}
-          margin={{ top: 5, right: 30, left: 40, bottom: 5 }} // Increased left margin for y-axis
+          margin={{ top: 10, right: 10, left: 20, bottom: 40 }} // Increased bottom margin
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
@@ -109,7 +112,7 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
             label={{ 
               value: 'Month', 
               position: 'insideBottom',
-              offset: -5
+              offset: 25 // Increased offset to prevent overlap
             }}
           />
           <YAxis 
@@ -119,10 +122,9 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
               value: 'Pool Size ($)', 
               angle: -90, 
               position: 'insideLeft',
-              offset: -30, // Increased offset to move label further left
-              style: { textAnchor: 'middle' }
+              offset: 10
             }}
-            width={70} // Increased width to accommodate tick labels
+            width={80} // Increased width to accommodate labels
           />
           <Tooltip 
             formatter={(value: number) => [formatTooltipValue(value), 'Pool Size']}
@@ -150,7 +152,7 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
       return (
         <ComposedChart 
           data={data}
-          margin={{ top: 5, right: 30, left: 40, bottom: 5 }} // Increased left margin
+          margin={{ top: 10, right: 10, left: 20, bottom: 40 }} // Increased bottom margin
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
@@ -158,7 +160,7 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
             label={{ 
               value: 'Month', 
               position: 'insideBottom',
-              offset: -5
+              offset: 25 // Increased offset to prevent overlap
             }}
           />
           <YAxis 
@@ -168,10 +170,9 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
               value: 'Revenue ($)', 
               angle: -90, 
               position: 'insideLeft',
-              offset: -30, // Increased offset
-              style: { textAnchor: 'middle' }
+              offset: 10
             }}
-            width={70} // Increased width
+            width={80} // Increased width to accommodate labels
           />
           <Tooltip 
             formatter={(value: number) => [formatTooltipValue(value), 'Revenue']}
@@ -231,7 +232,7 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
           Revenue
         </button>
       </div>
-      <div className="w-full h-[300px]">
+      <div className="w-full h-[350px]"> {/* Increased height to 350px */}
         <ResponsiveContainer width="100%" height="100%">
           {renderChart()}
         </ResponsiveContainer>
@@ -239,3 +240,4 @@ export const GrowthChart = ({ data }: GrowthChartProps) => {
     </div>
   );
 };
+
