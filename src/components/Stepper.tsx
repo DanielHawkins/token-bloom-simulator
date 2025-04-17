@@ -29,7 +29,8 @@ import { TokenIdInput } from "@/components/TokenIdInput";
 const NUM_MONTHS = 12;
 
 interface StepperProps {
-  onComplete: (results: MonthData[]) => void;
+  onComplete: (results: MonthData[], tokens?: { basic: string; premium: string }) => void;
+  persistedTokens?: { basic: string; premium: string } | null;
 }
 
 interface APYData {
@@ -43,8 +44,8 @@ interface MonthlyRevenue {
   revenue: number;
 }
 
-export const Stepper = ({ onComplete }: StepperProps) => {
-  const [currentStep, setCurrentStep] = useState(0);
+export const Stepper = ({ onComplete, persistedTokens }: StepperProps) => {
+  const [currentStep, setCurrentStep] = useState(persistedTokens ? 1 : 0);
   const [currentMonth, setCurrentMonth] = useState(1);
   const [revenue, setRevenue] = useState(getDefaultParams().monthlyRevenue.toString());
   const [revenueShare, setRevenueShare] = useState(getDefaultParams().revenueShare.toString());
@@ -58,7 +59,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   });
   const [simulationResults, setSimulationResults] = useState<MonthData[] | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
-  const [tokenIds, setTokenIds] = useState<{ basic: string; premium: string } | null>(null);
+  const [tokenIds, setTokenIds] = useState<{ basic: string; premium: string } | null>(persistedTokens || null);
 
   useEffect(() => {
     const revenueValue = parseFloat(revenue);
@@ -203,7 +204,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
       runSimulation();
     } else if (currentStep === 5) {
       if (simulationResults) {
-        onComplete(simulationResults);
+        onComplete(simulationResults, tokenIds || { basic: "TKN", premium: "TKNX" });
       }
       return;
     }
@@ -275,7 +276,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
   };
 
   const renderStepContent = () => {
-    const apyData = getApyData();
+    const apyData = calculateAPY();
     
     if (currentStep === 0) {
       return <TokenIdInput onComplete={handleTokenIdComplete} />;
@@ -450,7 +451,7 @@ export const Stepper = ({ onComplete }: StepperProps) => {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gradient">Premium token rate increase</h2>
             <p className="text-blue-400/80">
-              The premium token (AVYX) rate has increased based on your data:
+              The premium token {tokenIds ? `(${tokenIds.premium})` : "(TKNX)"} rate has increased based on your data:
             </p>
             <div className="bg-muted p-4 rounded-lg border border-blue-500/20 animate-pulse-glow">
               <p className="text-xl font-bold text-center text-gradient">

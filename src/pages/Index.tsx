@@ -15,14 +15,20 @@ const Index = () => {
   const [results, setResults] = useState<TokenGrowthResults | null>(null);
   const [stepperResults, setStepperResults] = useState<MonthData[] | null>(null);
   const [activeTab, setActiveTab] = useState<"stepper" | "simulator">("stepper");
+  const [tokenNames, setTokenNames] = useState<{ basic: string; premium: string } | null>(null);
   
   const handleSimulate = (params: TokenSimulationParams) => {
     const calculatedResults = calculateTokenGrowth(params);
     setResults(calculatedResults);
   };
   
-  const handleStepperComplete = (stepperData: MonthData[]) => {
+  const handleStepperComplete = (stepperData: MonthData[], tokens?: { basic: string; premium: string }) => {
     setStepperResults(stepperData);
+    
+    // If tokens are provided, update the token names
+    if (tokens && !tokenNames) {
+      setTokenNames(tokens);
+    }
     
     // Use the full simulation data from the stepper
     const lastMonth = stepperData[stepperData.length - 1];
@@ -42,6 +48,7 @@ const Index = () => {
     setStepperResults(null);
     setResults(null);
     setActiveTab("stepper");
+    // Note: We don't reset tokenNames here, so it persists across simulations
   };
 
   return (
@@ -98,7 +105,10 @@ const Index = () => {
                   </Card>
                 </div>
               ) : (
-                <Stepper onComplete={handleStepperComplete} />
+                <Stepper 
+                  onComplete={handleStepperComplete} 
+                  persistedTokens={tokenNames}
+                />
               )}
             </div>
           </TabsContent>
@@ -145,7 +155,10 @@ const Index = () => {
                       <CardContent className="pt-6">
                         <h2 className="text-2xl font-semibold mb-4 text-gradient">Monthly Breakdown</h2>
                         <ScrollArea className="h-[400px]">
-                          <ResultsTable data={results.months} />
+                          <ResultsTable 
+                            data={results.months} 
+                            tokenName={tokenNames?.basic || "TKN"}
+                          />
                         </ScrollArea>
                       </CardContent>
                     </Card>

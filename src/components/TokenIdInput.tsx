@@ -10,14 +10,12 @@ interface TokenIdInputProps {
 }
 
 export const TokenIdInput = ({ onComplete }: TokenIdInputProps) => {
-  const [tokenId, setTokenId] = useState("");
+  const [tokenId, setTokenId] = useState("TKN");
 
   const handleSubmit = () => {
-    if (!tokenId) {
-      alert("Please enter a token ID");
-      return;
-    }
-    onComplete(tokenId, `${tokenId}X`);
+    // Always use at least "TKN" if the field is empty
+    const finalTokenId = tokenId.trim() || "TKN";
+    onComplete(finalTokenId, `${finalTokenId}X`);
   };
 
   return (

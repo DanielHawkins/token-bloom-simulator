@@ -5,15 +5,21 @@ import { MonthData, formatCurrency } from "@/lib/tokenCalculations";
 interface ResultsTableProps {
   data: MonthData[];
   showAllMonths?: boolean;
+  tokenName?: string;
 }
 
-export const ResultsTable = ({ data, showAllMonths = true }: ResultsTableProps) => {
+export const ResultsTable = ({ data, showAllMonths = true, tokenName = "TKN" }: ResultsTableProps) => {
   // If not showing all months, just show the first month
   const displayData = showAllMonths ? data : data.length > 0 ? [data[0]] : [];
   
   return (
     <Table>
       <TableHeader>
+        <TableRow>
+          <TableHead colSpan={7} className="text-center text-lg font-semibold text-gradient">
+            Your {tokenName}X Token Growth Summary
+          </TableHead>
+        </TableRow>
         <TableRow>
           <TableHead>Month</TableHead>
           <TableHead className="text-right">Revenue</TableHead>
