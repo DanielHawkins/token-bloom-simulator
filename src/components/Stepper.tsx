@@ -468,8 +468,8 @@ export const Stepper = ({ onComplete, persistedTokens }: StepperProps) => {
             <p className="text-blue-400/80">
               The premium token {tokenIds ? `(${tokenIds.premium})` : "(TKNX)"} rate has increased based on your data:
             </p>
-            <div className="bg-muted p-4 rounded-lg border border-blue-500/20 animate-pulse-glow">
-              <p className="text-xl font-bold text-center text-gradient">
+            <div className="bg-[#1E293B] p-4 rounded-lg border border-blue-500/20">
+              <p className="text-xl font-bold text-center text-white">
                 $1.00 → ${apyData.newRate} (+{apyData.increase}% / ~{apyData.apy}% APY)
               </p>
             </div>
