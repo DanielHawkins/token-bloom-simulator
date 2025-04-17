@@ -273,13 +273,28 @@ export const Stepper = ({ onComplete, persistedTokens }: StepperProps) => {
   const handleTokenIdComplete = (basicToken: string, premiumToken: string) => {
     setTokenIds({ basic: basicToken, premium: premiumToken });
     setCurrentStep(1);
+    localStorage.setItem('tokenIds', JSON.stringify({ basic: basicToken, premium: premiumToken }));
   };
+
+  useEffect(() => {
+    const storedTokens = localStorage.getItem('tokenIds');
+    if (storedTokens) {
+      const parsedTokens = JSON.parse(storedTokens);
+      setTokenIds(parsedTokens);
+      setCurrentStep(1);
+    }
+  }, []);
 
   const renderStepContent = () => {
     const apyData = calculateAPY();
     
     if (currentStep === 0) {
-      return <TokenIdInput onComplete={handleTokenIdComplete} />;
+      return (
+        <TokenIdInput 
+          onComplete={handleTokenIdComplete} 
+          initialTokenId={tokenIds?.basic}
+        />
+      );
     }
 
     switch (currentStep) {

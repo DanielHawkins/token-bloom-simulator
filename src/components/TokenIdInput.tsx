@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,18 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface TokenIdInputProps {
   onComplete: (basicToken: string, premiumToken: string) => void;
+  initialTokenId?: string;
 }
 
-export const TokenIdInput = ({ onComplete }: TokenIdInputProps) => {
-  const [tokenId, setTokenId] = useState("TKN");
+export const TokenIdInput = ({ onComplete, initialTokenId }: TokenIdInputProps) => {
+  const [tokenId, setTokenId] = useState(initialTokenId || "TKN");
+
+  useEffect(() => {
+    // If initialTokenId is provided, update the state
+    if (initialTokenId) {
+      setTokenId(initialTokenId);
+    }
+  }, [initialTokenId]);
 
   const handleSubmit = () => {
     // Always use at least "TKN" if the field is empty
